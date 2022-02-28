@@ -1,0 +1,94 @@
+---
+title: "NTUtestQ2"
+author: "Chenyang Wu"
+date: "2022/2/27"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(deSolve)
+```
+
+## Question 2
+### 8.2
+#### This is my first time write a code to solve equations using the fourth-order Runge-Kutta method. I'll try my best.
+#### Setup the data
+```{r}
+time <- 0:100
+E0 <- 1
+S0 <- 10
+ES0 <- 0
+P0 <- 0
+k1 <- 100
+k2 <- 600
+k3 <- 150
+parms <- c(k1 = k1, k2 = k2, k3 = k3)
+e <- c(E = E0)
+s <- c(S = S0)
+p <- c(P = P0)
+ES <- c(ES = ES0)
+```
+
+#### Calculate for E
+```{r}
+logistE <- function(t, e, parms) {
+  with(as.list(parms), {
+    de <- k2 * ES[1] - k1 * e[1] * s[1] + k3 * ES[1]
+    list(de)
+  })
+}
+
+## reasonable numerical solution with rk4
+time <- seq(0, 100, 2)
+outE <- as.data.frame(rk4(e, time, logistE, parms))
+```
+
+#### Calculate for S
+```{r}
+logistS <- function(t, s, parms) {
+  with(as.list(parms), {
+    ds <- k2 * ES[1] - k1 * e[1] * s[1]
+    list(ds)
+  })
+}
+
+outS <- as.data.frame(rk4(s, time, logistS, parms))
+```
+
+#### Calculate for ES
+```{r}
+logistES <- function(t, ES, parms) {
+  with(as.list(parms), {
+    dES <- k1 * e[1] * s[1] - k2 * ES[1] - k3 * ES[1]
+    list(dES)
+  })
+}
+
+outES <- as.data.frame(rk4(ES, time, logistES, parms))
+```
+
+#### Calculate for P
+```{r}
+parms <- c(k1 = k1, k2 = k2, k3 = k3, ES = outES$ES)
+
+logistP <- function(t, p, parms) {
+  with(as.list(parms), {
+    dp <- k3 * ES
+    list(dp)
+  })
+}
+
+outP <- as.data.frame(rk4(p, time, logistP, parms))
+```
+
+#### Put them togethor
+```{r}
+Output <- cbind(outE, outS$S, outES$ES, outP$P)
+print(Output)
+```
